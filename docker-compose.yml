@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: providerdb
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pguser -d providerdb']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - '9090:9090'
+    environment:
+      SYSTEM_PORT: '9090'
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_USER: pguser
+      DB_PASSWORD: secretpassword
+      DB_NAME: providerdb
+      MASTER_ADDRESS: 'UQB3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0x0'
+      TON_CONFIG_URL: 'https://ton-blockchain.github.io/global.config.json'
+      BATCH_SIZE: '100'
