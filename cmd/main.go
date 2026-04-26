@@ -160,7 +160,7 @@ func run() (err error) {
 	cleanerWorker = cleaner.NewMetrics(workersRunCount, workersRunDuration, cleanerWorker)
 
 	cancelCtx, cancel := context.WithCancel(context.Background())
-	workers := workers.NewWorkers(telemetryWorker, providersMasterWorker, cleanerWorker, logger)
+	workers := workers.NewWorkers(telemetryWorker, providersMasterWorker, cleanerWorker, logger, config.Role)
 	go func() {
 		if wErr := workers.Start(cancelCtx); wErr != nil {
 			logger.Error("failed to start workers", slog.String("error", wErr.Error()))

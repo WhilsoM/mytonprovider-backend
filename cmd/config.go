@@ -50,6 +50,7 @@ type Config struct {
 	Metrics Metrics
 	TON     TON
 	DB      Postgress
+	Role    string `env:"ROLE" envDefault:"coordinator"`
 }
 
 func loadConfig() *Config {

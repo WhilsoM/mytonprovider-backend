@@ -17,6 +17,7 @@ type worker struct {
 	providersMaster providersmaster.Worker
 	cleaner         cleaner.Worker
 	logger          *slog.Logger
+	Role            string
 }
 
 type Workers interface {
@@ -24,18 +25,27 @@ type Workers interface {
 }
 
 func (w *worker) Start(ctx context.Context) (err error) {
-	go w.run(ctx, "UpdateTelemetry", w.telemetry.UpdateTelemetry)
-	go w.run(ctx, "UpdateBenchmarks", w.telemetry.UpdateBenchmarks)
+	role := w.Role
 
-	go w.run(ctx, "CollectNewProviders", w.providersMaster.CollectNewProviders)
-	go w.run(ctx, "UpdateKnownProviders", w.providersMaster.UpdateKnownProviders)
-	go w.run(ctx, "CollectProvidersNewStorageContracts", w.providersMaster.CollectProvidersNewStorageContracts)
-	go w.run(ctx, "StoreProof", w.providersMaster.StoreProof)
-	go w.run(ctx, "UpdateUptime", w.providersMaster.UpdateUptime)
-	go w.run(ctx, "UpdateRating", w.providersMaster.UpdateRating)
-	go w.run(ctx, "UpdateIPInfo", w.providersMaster.UpdateIPInfo)
+	if role == "coordinator" {
+		go w.run(ctx, "UpdateTelemetry", w.telemetry.UpdateTelemetry)
+		go w.run(ctx, "UpdateBenchmarks", w.telemetry.UpdateBenchmarks)
 
-	go w.run(ctx, "CleanupOldData", w.cleaner.CleanupOldData)
+		go w.run(ctx, "CollectNewProviders", w.providersMaster.CollectNewProviders)
+		go w.run(ctx, "UpdateKnownProviders", w.providersMaster.UpdateKnownProviders)
+		go w.run(ctx, "CollectProvidersNewStorageContracts", w.providersMaster.CollectProvidersNewStorageContracts)
+
+		go w.run(ctx, "CleanupOldData", w.cleaner.CleanupOldData)
+		w.logger.Info("Started workers in COORDINATOR mode")
+	}
+
+	if role == "agent" {
+		go w.run(ctx, "StoreProof", w.providersMaster.StoreProof)
+		go w.run(ctx, "UpdateUptime", w.providersMaster.UpdateUptime)
+		go w.run(ctx, "UpdateRating", w.providersMaster.UpdateRating)
+		go w.run(ctx, "UpdateIPInfo", w.providersMaster.UpdateIPInfo)
+		w.logger.Info("Started workers in AGENT mode")
+	}
 
 	return nil
 }
@@ -71,11 +81,13 @@ func NewWorkers(
 	providersMaster providersmaster.Worker,
 	cleaner cleaner.Worker,
 	logger *slog.Logger,
+	role string,
 ) Workers {
 	return &worker{
 		telemetry:       telemetry,
 		providersMaster: providersMaster,
 		cleaner:         cleaner,
 		logger:          logger,
+		Role:            role,
 	}
 }

@@ -178,3 +178,19 @@ func (h *handler) metrics(c *fiber.Ctx) error {
 
 	return adaptor.HTTPHandler(m)(c)
 }
+
+func (h *handler) getAgentTasks(c *fiber.Ctx) error {
+	req := v1.SearchProvidersRequest{
+		Limit: 10,
+	}
+
+	providersList, err := h.providers.SearchProviders(c.Context(), req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Tasks fetched successfully for Agent",
+		"tasks":   providersList,
+	})
+}

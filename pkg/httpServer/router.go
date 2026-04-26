@@ -33,6 +33,7 @@ func (h *handler) RegisterRoutes() {
 
 	apiv1 := h.server.Group("/api/v1", h.loggerMiddleware)
 	{
+		apiv1.Get("/internal/tasks", h.getAgentTasks)
 		{
 			providers := apiv1.Group("/providers")
 			providers.Post("/search", h.searchProviders)
