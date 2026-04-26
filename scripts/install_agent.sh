@@ -27,6 +27,6 @@ LOG_LEVEL=info
 EOF
 
 # 4. Build
-go build -o ton-agent ./cmd/main.go
+go build -o ton-agent ./cmd/...
 
 echo "--- Agent Installed. Run with: ./ton-agent ---"
