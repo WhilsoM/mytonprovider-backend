@@ -57,26 +57,8 @@ type Config struct {
 
 func loadConfig() *Config {
 	cfg := &Config{}
-	if err := env.Parse(&cfg.System); err != nil {
-		log.Fatalf("Failed to parse system config: %v", err)
-	}
-	if err := env.Parse(&cfg.Metrics); err != nil {
-		log.Fatalf("Failed to parse metrics config: %v", err)
-	}
-	if err := env.Parse(&cfg.DB); err != nil {
-		log.Fatalf("Failed to parse db config: %v", err)
-	}
-	if err := env.Parse(&cfg.TON); err != nil {
-		log.Fatalf("Failed to parse TON config: %v", err)
-	}
-	if err := env.Parse(&cfg.Role); err != nil {
-		log.Fatalf("Failed to parse role config: %v", err)
-	}
-	if err := env.Parse(&cfg.AgentMode); err != nil {
-		log.Fatalf("Failed to parse agent mode config: %v", err)
-	}
-	if err := env.Parse(&cfg.CoordinatorURL); err != nil {
-		log.Fatalf("Failed to parse coordinator URL config: %v", err)
+	if err := env.Parse(cfg); err != nil {
+		log.Fatalf("Failed to parse config: %v", err)
 	}
 
 	if cfg.System.Key == nil {
