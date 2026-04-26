@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 
 	simpleCache "mytonprovider-backend/pkg/cache"
@@ -127,16 +126,11 @@ func run() (err error) {
 	}
 
 	// Postgres
-	var connPool *pgxpool.Pool
-	if config.Role == "coordinator" {
-		connPool, err = connectPostgres(context.Background(), config, logger)
-		if err != nil {
-			logger.Error("failed to connect to Postgres", slog.String("error", err.Error()))
-			return
-		}
-		defer connPool.Close()
-	} else {
-		slog.Info("running in AGENT mode: skipping Postgres connection")
+	// TODO: in the future add condition to check coordinator or agent
+	connPool, err := connectPostgres(context.Background(), config, logger)
+	if err != nil {
+		logger.Error("failed to connect to Postgres", slog.String("error", err.Error()))
+		return
 	}
 
 	// Database
