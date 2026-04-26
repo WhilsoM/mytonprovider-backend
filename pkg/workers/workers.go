@@ -18,6 +18,7 @@ type worker struct {
 	cleaner         cleaner.Worker
 	logger          *slog.Logger
 	Role            string
+	CoordinatorURL  string
 }
 
 type Workers interface {
@@ -44,7 +45,8 @@ func (w *worker) Start(ctx context.Context) (err error) {
 		go w.run(ctx, "UpdateUptime", w.providersMaster.UpdateUptime)
 		go w.run(ctx, "UpdateRating", w.providersMaster.UpdateRating)
 		go w.run(ctx, "UpdateIPInfo", w.providersMaster.UpdateIPInfo)
-		w.logger.Info("Started workers in AGENT mode")
+
+		w.logger.Info("Started workers in AGENT mode", slog.String("coordinator_url", w.CoordinatorURL))
 	}
 
 	return nil
@@ -82,6 +84,7 @@ func NewWorkers(
 	cleaner cleaner.Worker,
 	logger *slog.Logger,
 	role string,
+	coordinatorURL string,
 ) Workers {
 	return &worker{
 		telemetry:       telemetry,
@@ -89,5 +92,6 @@ func NewWorkers(
 		cleaner:         cleaner,
 		logger:          logger,
 		Role:            role,
+		CoordinatorURL:  coordinatorURL,
 	}
 }

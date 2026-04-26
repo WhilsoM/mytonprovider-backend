@@ -46,11 +46,13 @@ type Postgress struct {
 }
 
 type Config struct {
-	System  System
-	Metrics Metrics
-	TON     TON
-	DB      Postgress
-	Role    string `env:"ROLE" envDefault:"coordinator"`
+	System         System
+	Metrics        Metrics
+	TON            TON
+	DB             Postgress
+	Role           string `env:"ROLE" envDefault:"coordinator"`
+	AgentMode      bool   `env:"AGENT_MODE" envDefault:"false"`
+	CoordinatorURL string `env:"COORDINATOR_URL" envDefault:"http://localhost:8080"`
 }
 
 func loadConfig() *Config {
@@ -66,6 +68,15 @@ func loadConfig() *Config {
 	}
 	if err := env.Parse(&cfg.TON); err != nil {
 		log.Fatalf("Failed to parse TON config: %v", err)
+	}
+	if err := env.Parse(&cfg.Role); err != nil {
+		log.Fatalf("Failed to parse role config: %v", err)
+	}
+	if err := env.Parse(&cfg.AgentMode); err != nil {
+		log.Fatalf("Failed to parse agent mode config: %v", err)
+	}
+	if err := env.Parse(&cfg.CoordinatorURL); err != nil {
+		log.Fatalf("Failed to parse coordinator URL config: %v", err)
 	}
 
 	if cfg.System.Key == nil {

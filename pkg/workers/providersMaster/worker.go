@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"math/big"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -99,6 +100,8 @@ type providersMasterWorker struct {
 	masterAddr     string
 	batchSize      uint32
 	logger         *slog.Logger
+	Role           string
+	CoordinatorURL string
 }
 
 type Worker interface {
@@ -473,13 +476,33 @@ func (w *providersMasterWorker) UpdateUptime(ctx context.Context) (interval time
 		failureInterval = 5 * time.Second
 	)
 
-	log := w.logger.With(slog.String("worker", "UpdateUptime"))
-	log.Debug("updating provider uptime")
-
+	log := w.logger.With(slog.String("worker", "UpdateUptime"), slog.String("role", w.Role))
 	interval = successInterval
 
+	if w.Role == "agent" {
+		log.Debug("agent mode: fetching tasks from coordinator")
+
+		endpoint := fmt.Sprintf("%s/api/v1/internal/tasks", w.CoordinatorURL)
+		resp, err := http.Get(endpoint)
+		if err != nil {
+			log.Error("failed to reach coordinator", slog.String("error", err.Error()))
+			return failureInterval, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Error("coordinator returned error", slog.Int("status", resp.StatusCode))
+			return failureInterval, fmt.Errorf("bad status: %d", resp.StatusCode)
+		}
+
+		log.Info("agent successfully synchronized with coordinator")
+		return successInterval, nil
+	}
+
+	log.Debug("coordinator mode: updating provider uptime in database")
 	err = w.providers.UpdateUptime(ctx)
 	if err != nil {
+		log.Error("database update failed", slog.String("error", err.Error()))
 		interval = failureInterval
 		return
 	}
